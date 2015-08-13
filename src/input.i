@@ -1,0 +1,6 @@
+
+KEY_ESC		= $45
+KEY_CURSOR_UP 	= $4c
+KEY_CURSOR_DOWN	= $4d
+KEY_ENTER	= $44
+
