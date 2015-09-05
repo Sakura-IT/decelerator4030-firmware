@@ -5,7 +5,7 @@ ASFLAGS=-Fvobj -m68020up
 CROSS_LDSCRIPT=bootrom.ld
 CROSS_LDFLAGS=-brawbin1 -T $(CROSS_LDSCRIPT)
 
-LOADER_OBJS=init.o start.o menu.o display.o input.o
+LOADER_OBJS=init.o start.o menu.o display.o input.o arrow.o
 LOADER_INCS=
 LOADER_IMAGE=bootrom.img
 
