@@ -4,12 +4,27 @@
 	INCLUDE	"display.i"
 	INCLUDE "input.i"
 
-	XREF	MenuPrint
+;--- from arrow.s ---
+	XREF	arrowPosY
+
+	XREF	ArrowDown
+	XREF	ArrowInit
+	XREF	ArrowUp
+
+;--- from display.s ---
 	XREF	screen
+
 	XREF	DoCopperList
 	XREF	SetDisplay
+
+;--- from input.s ---
 	XREF	SetKeyboard
 
+;--- from menu.s ---
+	XREF	MenuPrint
+	XREF	MenuUpdate
+
+;-----------------------------------------------------------------------------
 
 	GLOBAL start
 
@@ -29,7 +44,6 @@ SET_MAIN_FNC	MACRO
 ;
 start:
 		lea	$40000,sp	;TODO - perhaps better place for stack pointer should be chosen
-
 
 		bsr	DoCopperList
 		bsr	SetDisplay
@@ -52,14 +66,7 @@ MainLoop:
 		beq.b	.exit			;and do exit for that
 		jsr	(a0)
 
-
-		lea	keys(pc),a0
-		tst.b	$45(a0)
-		beq	.mm
-
-		move.w	#$500,color(a5)
-
-.mm		bra.b	MainLoop
+		bra.b	MainLoop
 
 .exit
 Nothing:	rts
@@ -73,9 +80,15 @@ InitMainMenu:
 
 		lea	menuItems(pc),a0
 		bsr	MenuInit
+
 		lea	menuItems(pc),a1
 		bsr	MenuPrint
-
+		
+		move.w	#MENU_ARROW_X,d0
+		move.w	#MENU_START_POS_Y,d1
+		move.w	#MENU_START_POS_Y,d2
+		move.w	#MENU_ITEM5_POS_Y,d3
+		bsr	ArrowInit
 		rts
 
 ;-----------------------------------------------------------------------------
@@ -84,15 +97,38 @@ MainMenuLoop:
 	;check cursor down
 		lea	keys(pc),a0
 		tst.b	KEY_CURSOR_DOWN(a0)
-		bne	.up
+		beq	.up
+
+		move.b	KEY_CURSOR_DOWN(a0),d0
+
+;.l		btst	#6,$bfe001
+;		bne	.l
+
+		sf	KEY_CURSOR_DOWN(a0)
+
+		bsr	ArrowDown
+		lea	menuItems(pc),a0
+		move.w	arrowPosY,d4
+		bra	MenuUpdate
 
 .up
 		tst.b	KEY_CURSOR_UP(a0)
-		bne	.enter
+		beq	.enter
+
+		sf	KEY_CURSOR_UP(a0)
+
+		bsr	ArrowUp
+		lea	menuItems(pc),a0
+		move.w	arrowPosY,d4
+		bra	MenuUpdate
 
 .enter
 		tst.b	KEY_ENTER(a0)
 		bne	.exit
+
+		sf	KEY_ENTER(a0)
+
+	;put here logic for menu entries
 
 .exit		rts
 
@@ -134,14 +170,23 @@ WaitVB:
 
 	DATA
 
+MENU_POS_X		EQU 280
+MENU_START_POS_Y	EQU 120
+MENU_ITEM2_POS_Y	EQU MENU_START_POS_Y+8
+MENU_ITEM3_POS_Y	EQU MENU_ITEM2_POS_Y+8
+MENU_ITEM4_POS_Y	EQU MENU_ITEM3_POS_Y+8
+MENU_ITEM5_POS_Y	EQU MENU_ITEM4_POS_Y+8
+
+MENU_ARROW_X		EQU MENU_POS_X-8
+
 menuItems:
 		dc.w	(.end-.start)/8-1
 .start
-		MITEM	280,120,1,.itemTxt1
-		MITEM	280,128,0,.itemTxt2
-		MITEM	280,136,1,.itemTxt3
-		MITEM	280,144,1,.itemTxt4
-		MITEM	280,152,1,.itemTxt5
+		MITEM	MENU_POS_X,MENU_START_POS_Y,MENU_COLOR_NORMAL,.itemTxt1
+		MITEM	MENU_POS_X,MENU_ITEM2_POS_Y,MENU_COLOR_NORMAL,.itemTxt2
+		MITEM	MENU_POS_X,MENU_ITEM3_POS_Y,MENU_COLOR_NORMAL,.itemTxt3
+		MITEM	MENU_POS_X,MENU_ITEM4_POS_Y,MENU_COLOR_NORMAL,.itemTxt4
+		MITEM	MENU_POS_X,MENU_ITEM5_POS_Y,MENU_COLOR_NORMAL,.itemTxt5
 
 		MITEM	260,180,1,.procInfo
 		MITEM	360,180,1,.memInfo

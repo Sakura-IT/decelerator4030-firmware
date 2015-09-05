@@ -50,3 +50,48 @@ MenuPrint:
 		rts
 
 ;-----------------------------------------------------------------------------
+;MenuUpdate - update color text in menu
+;
+;in
+;	a0 - menu items
+;	d4 - pos y
+;
+	XDEF	MenuUpdate
+MenuUpdate:
+
+	;copy for later usage
+		move.l	a0,a1
+
+		move.w	(a1),d0			;get amount of menu items
+		moveq	#MENU_COLOR_LIGHT,d1
+		subq.w	#2,a1
+.loop
+		addq.w	#8,a1
+		cmp.w	(a1),d1
+		dbeq	d0,.loop
+
+		move.w	#MENU_COLOR_NORMAL,(a1)			;set color
+		subq.w	#4,a1
+
+		movem.l	a0/d4,-(sp)
+		movem.w	(a1)+,d0-d3
+		lea	(a1,d3.w),a0
+		bsr	PrintMsg
+		movem.l	(sp)+,a0/d4
+
+		move.l	a0,a1
+		move.w	(a1),d0
+		subq.w	#4,a1
+.loop1
+		addq.w	#8,a1
+		cmp.w	(a1),d4
+		dbeq	d0,.loop1
+
+		move.w	#MENU_COLOR_LIGHT,2(a1)
+		subq.w	#2,a1
+		movem.w	(a1)+,d0-d3
+		lea	(a1,d3.w),a0
+		bsr	PrintMsg
+		rts
+
+;-----------------------------------------------------------------------------
